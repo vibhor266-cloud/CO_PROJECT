@@ -45,7 +45,16 @@ def assemble(assembly_lines: List[str]) -> List[str]:
         "or":   ("110", "0000000"),
         "and":  ("111", "0000000"),
     }
-
+    i_type_map = {
+        "addi": ("000", opcodes["I_arith"]),
+        "sltiu": ("011", opcodes["I_arith"]),
+        "lw": ("010", opcodes["I_load"]),
+        "jalr": ("000", opcodes["I_jalr"])
+    }
+    s_type_map = {
+        "sw": ("010", opcodes["S"])
+    }
+    
     machine_lines = []
 
     for line in assembly_lines:
@@ -57,7 +66,26 @@ def assemble(assembly_lines: List[str]) -> List[str]:
         parts = line.replace(",", "").split()
 
         instr = parts[0]
-
+        elif instr in i_type_map:
+            f3,op = i_type_map[instr]
+            rd = int(parts[1][1:])
+            if instr == "lw":
+                imm = int(parts[2])
+                rs1 = int(parts[3][1:])
+            else:
+                rs1 = int(parts[2][1:])
+                imm = int(parts[3])
+            imm_bin = format(imm & 0xFFF, "012b")
+            machine_code = imm_bin + format(rs1, "05b") + f3 + format(rd, "05b") + op
+            machine_lines.append(machine_code)
+        elif instr in s_type_map:
+            rs2 = int(parts[1][1:])
+            imm = int(parts[2])
+            rs1 = int(parts[3][1:])
+            f3, op = s_type_map[instr]
+            imm_bin = format(imm & 0xFFF, "012b")
+            machine_code = imm_bin[:7] + format(rs2, "05b") + format(rs1, "05b") + f3 + imm_bin[7:] + op
+            machine_lines.append(machine_code)
         if instr not in r_type_map:
             continue  # Ignore non R-type for now
 

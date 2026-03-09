@@ -300,6 +300,18 @@ def assemble(assembly_lines: List[str]) -> List[str]:
                 imm, rs1 = parse_memory_operand(operands[1], line_no)
                 require_signed_range(imm, 12, "Immediate")
                 machine_lines.append(encode_i(inst, rd, rs1, imm))
+            elif inst == "jalr":
+                if len(operands) == 2:
+                    rd = parse_register(operands[0])
+                    imm, rs1 = parse_memory_operand(operands[1], line_no)
+                elif len(operands) == 3:
+                    rd = parse_register(operands[0])
+                    rs1 = parse_register(operands[1])
+                    imm = parse_int(operands[2])
+                else:
+                    raise ValueError(f"Error at line {line_no}: jalr needs 2 or 3 operands")
+                require_signed_range(imm, 12, "Immediate")
+                machine_lines.append(encode_i(inst, rd, rs1, imm))
             else:
                 if len(operands) != 3:
                     raise ValueError(f"Error at line {line_no}: {inst} needs 3 operands")

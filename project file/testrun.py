@@ -2,7 +2,10 @@
 """Assembler implementation compatible with the CO grader interface."""
 
 import sys
+import re
 from typing import List, Optional
+
+LABEL_RE       = re.compile(r'^([A-Za-z][A-Za-z0-9_])\s:')
 
 
 Register_Encoding = {
@@ -199,38 +202,32 @@ def normalize_source_line(raw: str) -> str:
     return raw.split("#", 1)[0].strip()
 
 
-def lable_and_instruction(assembly_lines: List[str]):
-    labels: dict[str, int] = {}
+def parse_labels_and_instructions(assembly_lines: List[str]):
+    labels       = {}
     instructions = []
-    current_pc = 0
+    pc           = 0
 
-    for line_no, raw_line in enumerate(assembly_lines, start=1):
-        cleaned_line = normalize_source_line(raw_line)
-        if not cleaned_line:
+    for idx, raw in enumerate(assembly_lines, start=1):
+        line = normalize_source_line(raw)
+        if not line:
             continue
 
-        remaining_text = cleaned_line
-        while ":" in remaining_text:
-            if remaining_text.startswith(":"):
-                raise ValueError(f"Error at line {line_no}: Empty label")
-            label_text, trailing_text = remaining_text.split(":", 1)
-            label_name = label_text.strip()
+        # label dhundo
+        label_match = LABEL_RE.match(line)
+        if label_match:
+            label = label_match.group(1)
 
-            if " " in label_text or "\t" in label_text:
-                raise ValueError(f"Error at line {line_no}: Label must be at instruction start with no spaces before ':'")
-            if not is_valid_label(label_name):
-                raise ValueError(f"Error at line {line_no}: Invalid label name: {label_name}")
-            if label_name in labels:
-                raise ValueError(f"Error at line {line_no}: Duplicate label: {label_name}")
+            if label in labels:
+                raise ValueError(f"Error at line {idx}: Duplicate label '{label}'")
 
-            labels[label_name] = current_pc
-            remaining_text = trailing_text.strip()
-            if not remaining_text:
-                break
+            labels[label] = pc
+            # label ke baad jo bacha woh instruction hai
+            line = line[label_match.end():].strip()
 
-        if remaining_text:
-            instructions.append((line_no, current_pc, remaining_text))
-            current_pc += 4
+        # agar kuch instruction bacha hai toh store karo
+        if line:
+            instructions.append((idx, pc, line))
+            pc += 4
 
     return labels, instructions
 
@@ -270,7 +267,7 @@ def is_virtual_halt(inst: str, operands: List[str]) -> bool:
 
 
 def assemble(assembly_lines: List[str]) -> List[str]:
-    labels, instructions = lable_and_instruction(assembly_lines)
+    labels, instructions = parse_labels_and_instructions(assembly_lines)
     machine_lines: List[str] = []
     virtual_halt_line: Optional[int] = None
 

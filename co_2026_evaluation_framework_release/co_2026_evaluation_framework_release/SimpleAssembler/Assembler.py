@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-"""Assembler implementation compatible with the CO grader interface."""
-
 import sys
 
 

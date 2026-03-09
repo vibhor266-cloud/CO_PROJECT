@@ -2,7 +2,6 @@
 """Assembler implementation compatible with the CO grader interface."""
 
 import sys
-from typing import List, Optional
 
 
 Register_Encoding = {
@@ -95,7 +94,7 @@ def is_valid_label(label: str) -> bool:
             return False
     return True
 
-def parse_args(argv: List[str]) -> tuple[str, str, Optional[str]]:
+def parse_args(argv: list[str]) -> tuple[str, str, str | None]:
     if len(argv) < 3:
         print(
             "Usage: python3 Assembler.py <input_assembly_path> <output_machine_code_path> [output_readable_path]",
@@ -108,19 +107,19 @@ def parse_args(argv: List[str]) -> tuple[str, str, Optional[str]]:
     return input_path, output_path, readable_path
 
 
-def read_assembly_lines(input_path: str) -> List[str]:
+def read_assembly_lines(input_path: str) -> list[str]:
     with open(input_path, "r", encoding="utf-8") as f:
         return f.readlines()
 
 
-def write_output_lines(path: str, lines: List[str]) -> None:
+def write_output_lines(path: str, lines: list[str]) -> None:
     with open(path, "w", encoding="utf-8") as f:
         if lines:
             f.write(" \n ".join(lines))
             f.write(" \n ")
 
 
-def write_readable_output(path: str, assembly_lines: List[str], machine_lines: List[str]) -> None:
+def write_readable_output(path: str, assembly_lines: list[str], machine_lines: list[str]) -> None:
     with open(path, "w", encoding="utf-8") as f:
         f.write(" Input assembly lines:\n")
         
@@ -199,7 +198,7 @@ def normalize_source_line(raw: str) -> str:
     return raw.split("#", 1)[0].strip()
 
 
-def lable_and_instruction(assembly_lines: List[str]):
+def lable_and_instruction(assembly_lines: list[str]):
     labels: dict[str, int] = {}
     instructions = []
     current_pc = 0
@@ -257,7 +256,7 @@ def resolve_branch_or_jump_target(element: str, labels: dict[str, int], pc: int,
     return parse_int(element)
 
 
-def is_virtual_halt(inst: str, operands: List[str]) -> bool:
+def is_virtual_halt(inst: str, operands: list[str]) -> bool:
     if inst != "beq" or len(operands) != 3:
         return False
     try:
@@ -269,10 +268,10 @@ def is_virtual_halt(inst: str, operands: List[str]) -> bool:
     return rs1 == "zero" and rs2 == "zero" and imm == 0
 
 
-def assemble(assembly_lines: List[str]) -> List[str]:
+def assemble(assembly_lines: list[str]) -> list[str]:
     labels, instructions = lable_and_instruction(assembly_lines)
-    machine_lines: List[str] = []
-    virtual_halt_line: Optional[int] = None
+    machine_lines: list[str] = []
+    virtual_halt_line: int | None = None
 
     for idx, parsed in enumerate(instructions):
         line_no, pc, normalized = parsed
@@ -379,7 +378,7 @@ def assemble(assembly_lines: List[str]) -> List[str]:
 def main() -> None:
     input_path, output_path, readable_path = parse_args(sys.argv)
     assembly_lines = read_assembly_lines(input_path)
-    machine_lines: List[str] = []
+    machine_lines: list[str] = []
 
     try:
         machine_lines = assemble(assembly_lines)
@@ -397,3 +396,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

@@ -284,7 +284,7 @@ def assemble(assembly_lines: list[str]) -> list[str]:
 
         if inst in R_type_registor:
             if len(operands) != 3:
-                raise ValueError(f"Error at line {parsed.line_no}: R-type needs 3 operands")
+                raise ValueError(f"Error at line {line_no}: R-type needs 3 operands")
             rd = parse_register(operands[0])
             rs1 = parse_register(operands[1])
             rs2 = parse_register(operands[2])
@@ -393,4 +393,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
